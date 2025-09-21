@@ -1,7 +1,9 @@
 import dayjs from "dayjs";
 import { emailTemplates } from "./email-template.js";
-import { EMAIL_ADDRESS } from "../config/env.js";
-import transporter from "../config/nodemailer.js";
+import { EMAIL_ADDRESS, SENDGRID_API_KEY } from "../config/env.js";
+import sgMail from "@sendgrid/mail";
+
+sgMail.setApiKey(SENDGRID_API_KEY);
 
 export const sendReminderEmail = async ({ to, type, subscription }) => {
   if (!to || !type) throw new Error("Missing required parameters");
@@ -29,8 +31,10 @@ export const sendReminderEmail = async ({ to, type, subscription }) => {
     html: message,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) return console.log("Error sending email: ", error);
-    console.log("Email sent: ", info.response);
-  });
+  try {
+    await sgMail.send(mailOptions);
+    console.log(`Email sent to ${to}`);
+  } catch (error) {
+    console.log("Error sending email: ", error);
+  }
 };
